@@ -24,16 +24,47 @@ public class LoginPage {
     @FindBy(xpath = "//button[contains(@class,'btn-primary')]")
     public WebElement loginButton;
 
+    @FindBy(xpath = "//div[contains(@class, 'invalid-feedback') and text() = 'Please enter a valid email']")
+    private WebElement validationEmail;
+
+    @FindBy(xpath = "//div[contains(@class, 'invalid-feedback') and text() = 'Please enter a password']")
+    private WebElement validationPassword;
+
     public void visit() {
         webDriver.get(testProperties.getAppBaseUrl() + "simple-login");
     }
 
-    public void doLogin(String emailtxt, String passwordtxt){
+    public void doLogin(String emailtxt, String passwordtxt) {
         email.sendKeys(emailtxt);
         password.sendKeys(passwordtxt);
         loginButton.click();
+    }
+
+    public void fillBlankEmailandPassword() {
+        loginButton.click();
+        getValidateTextEmail();
+        getValidateTextPassword();
+    }
+
+    public String getValidateTextEmail() {
+        return validationEmail.getText();
+    }
+
+    public String getValidateTextPassword() {
+        return validationPassword.getText();
+    }
+
+    public void fillInvalidEmailAndValidPassword() {
+        getValidateTextEmail();
+    }
+
+    public void fillBlankEmail() {
+        getValidateTextEmail();
 
     }
 
-    
+    public void fillBlankPassword() {
+        getValidateTextPassword();
+
+    }
 }
