@@ -15,4 +15,5 @@ public class SimpleTest extends BaseTest {
         springHomePage.visit();
         assertThat(springHomePage.hero.getText()).contains("Spring");
     }
+
 }

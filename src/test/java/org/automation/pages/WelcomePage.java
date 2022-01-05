@@ -26,6 +26,7 @@ public class WelcomePage {
 
     public void clickOnReturnToForm() {
           returnToFormLink.click();
-//        webDriver.findElement(By.linkText("Return to form")).click();
     }
+
+
 }
