@@ -13,6 +13,7 @@ public class LoginTest extends BaseTest {
     private static final String INVALID_MAIL = "xyzabc123@";
     private static final String BLANK_MAIL = "";
     private static final String BLANK_PASSWORD = "";
+    private static final String PAGE = "https://automation-in-practice.herokuapp.com/simple-login";
 
     @Autowired
     private LoginPage loginPage;
@@ -20,43 +21,38 @@ public class LoginTest extends BaseTest {
     private WelcomePage welcomePage;
 
     @Test
-    public void doLogin() {
+    public void enterAValidEmailAndPassword() {
         loginPage.visit();
         loginPage.doLogin(EMAIL, PASSWORD);
 
         String welcomeMsg = welcomePage.getWelcomeText();
         assertThat(welcomeMsg).contains(EMAIL);
-        welcomePage.clickOnReturnToForm();
+
     }
 
     //Validate logging into the application using invalid email and valid password
     @Test
-    public void useAnInvalidEmailAndAValidPassword() {
+    public void enterAnInvalidEmailAndValidPassword() {
         loginPage.visit();
         loginPage.doLogin(INVALID_MAIL, PASSWORD);
-        loginPage.fillInvalidEmailAndValidPassword();
+
+        //Verify if validation message are being displayed
+        assertThat(loginPage.isEmailValidationMessageVisible()).isTrue();
+
     }
 
-    //Validate logging into the application using blank email and blank password
+    //Validate logging into the application using empty email and empty password
     @Test
-    public void useBlankEmailAndPassword() {
+    public void enterEmptyEmailAndPassword() {
         loginPage.visit();
-        loginPage.fillBlankEmailandPassword();
+        // Validate if inputs are empty
+        loginPage.validateEmptyEmailAndPassword(BLANK_MAIL, BLANK_PASSWORD);
+        // Verify if validation messages are being displayed
+        assertThat(loginPage.isEmailValidationMessageVisible()).isTrue();
+        assertThat(loginPage.isPasswordValidationMessageVisible()).isTrue();
+        //Verify is on current URL
+        assertThat(loginPage.getCurrentURL()).isEqualTo(PAGE);
     }
 
-    //Validate logging into the application using blank email and a password
-    @Test
-    public void useAnBlankEmailAndAValidPassword() {
-        loginPage.visit();
-        loginPage.doLogin(BLANK_MAIL, PASSWORD);
-        loginPage.fillBlankEmail();
-    }
 
-    //Validate logging into the application using an email and blank password
-    @Test
-    public void useAnEmailAndBlankPassword() {
-        loginPage.visit();
-        loginPage.doLogin(EMAIL, BLANK_PASSWORD);
-        loginPage.fillBlankPassword();
-    }
 }

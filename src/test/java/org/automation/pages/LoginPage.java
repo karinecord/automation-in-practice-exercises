@@ -16,10 +16,10 @@ public class LoginPage {
     TestProperties testProperties;
 
     @FindBy(id = "email")
-    public WebElement email;
+    public WebElement emailInput;
 
     @FindBy(id = "password")
-    public WebElement password;
+    public WebElement passwordInput;
 
     @FindBy(xpath = "//button[contains(@class,'btn-primary')]")
     public WebElement loginButton;
@@ -34,37 +34,29 @@ public class LoginPage {
         webDriver.get(testProperties.getAppBaseUrl() + "simple-login");
     }
 
-    public void doLogin(String emailtxt, String passwordtxt) {
-        email.sendKeys(emailtxt);
-        password.sendKeys(passwordtxt);
+    public void doLogin(String email, String password) {
+        emailInput.sendKeys(email);
+        passwordInput.sendKeys(password);
         loginButton.click();
     }
 
-    public void fillBlankEmailandPassword() {
+
+    public void validateEmptyEmailAndPassword(String email, String password) {
+        emailInput.sendKeys(email);
+        passwordInput.sendKeys(password);
         loginButton.click();
-        getValidateTextEmail();
-        getValidateTextPassword();
     }
 
-    public String getValidateTextEmail() {
-        return validationEmail.getText();
+    public boolean isEmailValidationMessageVisible() {
+        return validationEmail.isDisplayed();
     }
 
-    public String getValidateTextPassword() {
-        return validationPassword.getText();
+    public boolean isPasswordValidationMessageVisible() {
+        return validationPassword.isDisplayed();
     }
 
-    public void fillInvalidEmailAndValidPassword() {
-        getValidateTextEmail();
+    public String getCurrentURL(){
+        return webDriver.getCurrentUrl();
     }
 
-    public void fillBlankEmail() {
-        getValidateTextEmail();
-
-    }
-
-    public void fillBlankPassword() {
-        getValidateTextPassword();
-
-    }
 }

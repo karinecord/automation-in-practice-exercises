@@ -15,13 +15,13 @@ public class WelcomePage {
     WebDriver webDriver;
 
     @FindBy(xpath = "//p[contains(text(),'Welcome')]")
-    public WebElement cardText;
+    public WebElement welcomeMessage;
 
     @FindBy(xpath = "//a[contains(text(),'Return to form')]")
     private WebElement returnToFormLink;
 
     public String getWelcomeText() {
-        return cardText.getText();
+        return welcomeMessage.getText();
     }
 
     public void clickOnReturnToForm() {
