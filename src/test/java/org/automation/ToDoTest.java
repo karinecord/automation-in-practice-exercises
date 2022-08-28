@@ -3,92 +3,107 @@ package org.automation;
 import org.automation.pages.ToDoPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ToDoTest extends BaseTest {
-    private static final String TASK_1 = "Mopping.";
-    private static final String TASK_2 = "Make bed.";
-    private static final String TASK_3 = "Clean sink.";
-    private static final String TASK_4 = "Set table.";
-    private static final String TASK_5 = "Sort clothes.";
-    private static final String TASK_6 = "Do the washing.";
-    private static final String TASK_MAX_100_CHARACTERS = "Recite positive affirmations, meditaion, exercise 30 minutes, plan your day, avoid snoozing and pray";
-    private static final String TASK_MIN_100_CHARACTERS = "Have a cup of tea, Drink water and Review your goals.";
+    private static final String TASK_MOPPING = "Mopping.";
+    private static final String TASK_MAKE_BED = "Make bed.";
+    private static final String TASK_CLEAR_SINK = "Clean sink.";
+    private static final String TASK_SET_TABLE = "Set table.";
+    private static final String TASK_SORT_CLOTHES = "Sort clothes.";
+    private static final String TASK_DO_THE_WASHING = "Do the washing.";
+    private static final String TASK_MORE_THAN_100_CHARACTERS = "Recite positive affirmations, meditation, exercise 30 minutes, plan your day, avoid snoozing and pray";
 
     @Autowired
     private ToDoPage todoPage;
 
+    @BeforeMethod
+    public void visitTodoPage() {
+        todoPage.visit();
+    }
+
+    @Test
+    public void testMaximumInputCharLimit() {
+        todoPage.typeNewTask(TASK_MORE_THAN_100_CHARACTERS);
+        assertThat(todoPage.getTodoAddNewTaskInputValue()).hasSize(100).isNotEqualTo(TASK_MORE_THAN_100_CHARACTERS);
+    }
+
     @Test
     public void addMultipleTasks() {
-        todoPage.visit();
-        todoPage.addMultipleTasks(TASK_1, TASK_2, TASK_3, TASK_4, TASK_5, TASK_6);
-        assertThat(TASK_1).isEqualTo("Mopping.");
-        assertThat(TASK_2).isEqualTo("Make bed.");
-        assertThat(TASK_3).isEqualTo("Clean sink.");
-        assertThat(TASK_4).isEqualTo("Set table.");
-        assertThat(TASK_5).isEqualTo("Sort clothes.");
-        assertThat(TASK_6).isEqualTo("Do the washing.");
-
+        List<String> listTaskToBeAdded = List.of(
+                TASK_MOPPING, TASK_MAKE_BED, TASK_CLEAR_SINK, TASK_SET_TABLE, TASK_SORT_CLOTHES, TASK_DO_THE_WASHING
+        );
+        for (String newTask : listTaskToBeAdded) {
+            todoPage.addNewTask(newTask);
+        }
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(listTaskToBeAdded);
     }
 
     @Test
     public void addOneTask() {
-        todoPage.visit();
-        todoPage.addOneTask(TASK_1);
-        assertThat(TASK_1).contains("Mopping");
+        todoPage.addNewTask(TASK_MOPPING);
+
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(List.of(TASK_MOPPING));
     }
 
     @Test
     public void removeOneTask() {
-        todoPage.visit();
-        todoPage.addOneTask(TASK_1);
-        todoPage.removeOneTask();
-        assertThat(todoPage.todo.contains(TASK_1)).isFalse();
+        todoPage.addNewTask(TASK_MOPPING);
+
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(List.of(TASK_MOPPING));
+
+        todoPage.removeTask(TASK_MOPPING);
+
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(List.of());
+        assertThat(todoPage.isNoTaskCreatedMessageVisible()).isTrue();
     }
 
     @Test
     public void removeAllTasks() {
-        todoPage.visit();
-        addMultipleTasks();
+        todoPage.addNewTask(TASK_MOPPING);
+        todoPage.addNewTask(TASK_CLEAR_SINK);
+
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(List.of(TASK_MOPPING, TASK_CLEAR_SINK));
+
         todoPage.removeAllTask();
-        assertThat(todoPage.todo.contains(TASK_1)).isFalse();
-        assertThat(todoPage.todo.contains(TASK_2)).isFalse();
-        assertThat(todoPage.todo.contains(TASK_3)).isFalse();
-        assertThat(todoPage.todo.contains(TASK_4)).isFalse();
-        assertThat(todoPage.todo.contains(TASK_5)).isFalse();
-        assertThat(todoPage.todo.contains(TASK_6)).isFalse();
+
+        assertThat(todoPage.getAllTodoTasksText()).hasSameElementsAs(List.of());
+        assertThat(todoPage.isNoTaskCreatedMessageVisible()).isTrue();
     }
 
     @Test
     public void checkOneTask() {
-        todoPage.visit();
-        todoPage.addOneTask(TASK_1);
-        todoPage.checkOneTask();
-        assertThat(todoPage.checkboxTask.isSelected()).isTrue();
+        todoPage.addNewTask(TASK_MOPPING);
+
+        todoPage.checkTask(TASK_MOPPING);
+
+        assertThat(todoPage.isTaskChecked(TASK_MOPPING)).isTrue();
     }
 
     @Test
     public void checkAllTasks() {
-        todoPage.visit();
-        addMultipleTasks();
-        todoPage.checkAllTasks();
-        assertThat(todoPage.checkboxTask.isSelected()).isTrue();
-    }
+        List<String> listTaskToBeAdded = List.of(
+                TASK_MOPPING, TASK_MAKE_BED, TASK_CLEAR_SINK, TASK_SET_TABLE, TASK_SORT_CLOTHES, TASK_DO_THE_WASHING
+        );
 
-    @Test
-    public void validateMaximumOf100Characters() {
-        todoPage.visit();
-        todoPage.addOneTask(TASK_MAX_100_CHARACTERS);
-        assertThat(TASK_MAX_100_CHARACTERS).contains("Recite positive affirmations, meditaion, exercise 30 minutes, plan your day, avoid snoozing and pray");
-    }
+        for (String newTask : listTaskToBeAdded) {
+            todoPage.addNewTask(newTask);
+        }
 
-    @Test
-    public void validateMinimumOf100Characters() {
-        todoPage.visit();
-        todoPage.addOneTask(TASK_MIN_100_CHARACTERS);
-        assertThat(TASK_MIN_100_CHARACTERS).contains("Have a cup of tea, Drink water and Review your goals.");
+        for (String task : listTaskToBeAdded) {
+            assertThat(todoPage.isTaskChecked(task)).isFalse();
+        }
+
+        for (String task : listTaskToBeAdded) {
+            todoPage.checkTask(task);
+        }
+
+        for (String task : listTaskToBeAdded) {
+            assertThat(todoPage.isTaskChecked(task)).isTrue();
+        }
     }
 }
-
-

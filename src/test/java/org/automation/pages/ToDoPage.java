@@ -2,11 +2,13 @@ package org.automation.pages;
 
 import org.automation.architecture.TestProperties;
 import org.automation.architecture.annotations.PageObject;
+import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindAll;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.NoSuchElementException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -23,11 +25,14 @@ public class ToDoPage {
     @FindAll(@FindBy(xpath = "//*[@id='todoApp']/li[1]/input"))
     public List<WebElement> todo;
 
-    @FindBy(xpath = "//*[@id='todoApp']/li[1]/input")
-    public WebElement todokey;
+    @FindBy(css = "#todoApp .list-group-item.align-items-center")
+    public List<WebElement> todoTasksList;
 
-    @FindBy(xpath = "//a[@class='ms-auto p-1']")
-    private WebElement removeTaskTitle;
+    @FindBy(css = "#todoApp input[type='text']")
+    public WebElement todoAddNewTaskInput;
+
+    @FindBy(xpath = "//*[text()='There are no tasks created']")
+    public WebElement noTaskCreatedMessage;
 
     @FindBy(css = "input.form-check-input")
     public WebElement checkboxTask;
@@ -36,66 +41,74 @@ public class ToDoPage {
         webDriver.get(testProperties.getAppBaseUrl() + "todo");
     }
 
-    public void pressEnter() {
-
-        todokey.sendKeys(Keys.ENTER);
-
+    public void addNewTask(String taskName) {
+        todoAddNewTaskInput.sendKeys(taskName);
+        todoAddNewTaskInput.sendKeys(Keys.ENTER);
     }
 
-    public void addOneTask(String TASK_1) {
-        todokey.sendKeys(TASK_1);
-        pressEnter();
-    }
-
-    public List<String> addMultipleTasks(String TASK_1, String TASK_2, String TASK_3, String TASK_4, String TASK_5, String TASK_6) {
-        List<String> elementsTask = new ArrayList<>();
-        for (WebElement element : todo) {
-            elementsTask.add(TASK_1);
-            element.sendKeys(TASK_1);
-            pressEnter();
-
-            elementsTask.add(TASK_2);
-            element.sendKeys(TASK_2);
-            pressEnter();
-
-            elementsTask.add(TASK_3);
-            element.sendKeys(TASK_3);
-            pressEnter();
-
-            elementsTask.add(TASK_4);
-            element.sendKeys(TASK_4);
-            pressEnter();
-
-            elementsTask.add(TASK_5);
-            element.sendKeys(TASK_5);
-            pressEnter();
-
-            elementsTask.add(TASK_6);
-            element.sendKeys(TASK_6);
-            pressEnter();
-
+    public void removeTask(String taskName) {
+        for (WebElement newTaskElement : todoTasksList) {
+            if (newTaskElement.getText().equals(taskName)) {
+                clickOnRemoveTask(newTaskElement);
+            }
         }
-        return elementsTask;
+    }
+
+    public void checkTask(String taskName) {
+        for (WebElement newTaskElement : todoTasksList) {
+            if (newTaskElement.getText().equals(taskName)) {
+                WebElement checkbox = newTaskElement.findElement(By.cssSelector(".form-check-input"));
+                checkbox.click();
+            }
+        }
+    }
+
+    public List<String> getAllTodoTasksText() {
+        List<String> listOfAddedTasks = new ArrayList<>();
+
+        for (WebElement newTaskElement : todoTasksList) {
+            listOfAddedTasks.add(newTaskElement.getText());
+        }
+
+        return listOfAddedTasks;
     }
 
     public void removeAllTask() {
-        for (int i = 0; i <= 5; i++) {
-            removeTaskTitle.click();
+        for (WebElement taskElement : todoTasksList) {
+            clickOnRemoveTask(taskElement);
         }
     }
 
-    public void removeOneTask() {
-        removeTaskTitle.click();
+    public boolean isTaskChecked(String taskName) {
+        for (WebElement taskElement : todoTasksList) {
+            if (taskElement.getText().equals(taskName)) {
+                WebElement labelElement = taskElement.findElement(By.cssSelector("label"));
+                String cssClasses = labelElement.getAttribute("class");
+                return cssClasses.contains("text-decoration-line-through");
+            }
+        }
+
+        return false;
     }
 
-    public void checkOneTask() {
-        checkboxTask.click();
-    }
-
-    public void checkAllTasks() {
-        for (int i = 0; i <= 5; i++) {
-            checkboxTask.click();
+    public boolean isNoTaskCreatedMessageVisible() {
+        try {
+            return noTaskCreatedMessage.isDisplayed();
+        } catch (NoSuchElementException e) {
+            return false;
         }
     }
 
+    private void clickOnRemoveTask(WebElement webElement) {
+        WebElement removeElement = webElement.findElement(By.cssSelector("*[title='Remove task']"));
+        removeElement.click();
+    }
+
+    public String getTodoAddNewTaskInputValue() {
+        return todoAddNewTaskInput.getAttribute("value");
+    }
+
+    public void typeNewTask(String taskName) {
+        todoAddNewTaskInput.sendKeys(taskName);
+    }
 }
