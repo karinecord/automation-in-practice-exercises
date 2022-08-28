@@ -1,244 +1,169 @@
 package org.automation;
 
-import org.assertj.core.api.Assertions;
+import org.automation.models.Person;
 import org.automation.pages.FilteringTablePage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FilteringTableTest extends BaseTest {
-    private static final String FIRSTNAME = "Geneva";
-    private static final String LASTNAME = "Wilson";
-    private static final String DATEPICKE = "11132012";
-    private static final Integer YEAR = 2022;
-    private static final Integer MONTH = 3;
-    private final static int OPTION_5 = 0;
-    private final static int OPTION_10 = 1;
-    private final static int OPTION_15 = 2;
-
-    private static final String SpecialCharacter = ".";
-    private static final String  BlankSpace = "  ";
-
+    private static final String FIRST_NAME_GENEVA = "Geneva";
+    private static final String LAST_NAME_WILSON = "Wilson";
 
     @Autowired
     private FilteringTablePage filterPage;
 
-    @Test
-    public void filterByFirstName() {
+    @BeforeMethod
+    public void visitTodoPage() {
         filterPage.visit();
-        filterPage.filterByFirstName(FIRSTNAME);
-        assertThat(filterPage.displaysOnTable()).isTrue();
-
-    }
-
-    @Test
-    public void filterByLastName() {
-        filterPage.visit();
-        filterPage.filterByLastName(LASTNAME);
-        assertThat(filterPage.displaysOnTable()).isTrue();
-
-    }
-
-    @Test
-    public void filterByFilterbutton() {
-        filterPage.visit();
-        filterPage.filterByFilterButton();
-        assertThat(filterPage.displaysOnTable()).isTrue();
-
+        filterPage.waitForSpinner();
     }
 
     @Test
     public void filterByBirthDate() {
-        filterPage.visit();
-        filterPage.filterByFromBirthDate(MONTH, YEAR);
+        LocalDate birthDate = LocalDate.parse("2012-11-13");
 
-        assertThat(filterPage.displaysOnTable()).isTrue();
+        //Select birthday date
+        filterPage.setBirthDateFrom(birthDate);
 
+        //Click on filter button
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
+
+        List<Person> listRecords = filterPage.getListRecords();
+
+        for (Person person: listRecords) {
+            //Checking if the birthday listed in the table is equal to the added date.
+            assertThat(person.getBirthDate()).isEqualTo(birthDate);
+        }
     }
 
     @Test
     public void filterFromToBirthDate() {
-        filterPage.visit();
-        filterPage.filterByFromToBirthDate(MONTH, YEAR);
+        LocalDate birthDateFrom = LocalDate.parse("1981-01-01");
+        LocalDate birthDateTo = LocalDate.parse("1981-07-11");
 
-        assertThat(filterPage.displaysOnTable()).isTrue();
+        filterPage.setBirthDateFrom(birthDateFrom);
+        filterPage.setBirthDateTo(birthDateTo);
 
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
+
+        //Record added to table
+        List<Person> listRecords = filterPage.getListRecords();
+        for (Person person: listRecords) {
+            assertThat(person.getBirthDate()).isBetween(birthDateFrom, birthDateTo);
+        }
     }
 
     @Test
-    public void clearFitler() {
-        filterPage.visit();
-        filterPage.clearFilters(FIRSTNAME, MONTH, YEAR);
+    public void testOnlyActive() {
+        //Selecting the checkbox "Only active"
+        filterPage.checkOnlyActive();
 
-//incompleto
+        //Clicking on "Filter" button
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
 
-
+        List<Person> onlyActivePersonList = filterPage.getListRecords();
+        for (Person person : onlyActivePersonList) {
+            assertThat(person.getIsActive()).isTrue();
+        }
     }
 
     @Test
-    public void clearFilterOnCheckboxes() {
-        filterPage.visit();
-        filterPage.clearFilterOnCheckboxes();
-        assertThat(filterPage.chkFirstName.equals("Null"));
-        assertThat(filterPage.chkLastName.equals("Null"));
+    public void listAllStatusWhenVisitingPage() {
+        filterPage.waitForSpinnerToHide();
+
+        while (true) {
+            List<Person> listRecords = filterPage.getListRecords();
+
+            for (Person person : listRecords) {
+                assertThat(person.getIsActive()).isIn(true, false); // Check all status: Active and Inactive
+            }
+
+            if (filterPage.isNextPageClickable()) {
+                filterPage.clickOnNextPage();
+                filterPage.waitForSpinner();
+            } else {
+                break;
+            }
+        }
     }
 
     @Test
-    public void clearFilterBirthDateRange() {
-        filterPage.visit();
-        filterPage.clearFilterFromTo(MONTH, YEAR);
-        assertThat(filterPage.labelBirthDate.equals("Null"));
+    public void filterByFirstName() {
+        //Enter first name
+        filterPage.setInputQueryFilter(FIRST_NAME_GENEVA);
 
+        // Click on first name check
+        filterPage.checkFirstName();
+
+        // Click on Filter button
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
+
+        List<Person> listRecords = filterPage.getListRecords();
+        for (Person person: listRecords) {
+            assertThat(person.getFirstName()).isEqualTo(FIRST_NAME_GENEVA);
+        }
     }
 
     @Test
-    public void clearOnlyActiveCheckbox() {
-        filterPage.visit();
-        filterPage.clearOnlyActiveCheckbox();
-        assertThat(filterPage.activeInactiveButton.equals("Null"));
+    public void filterByLastName() {
+        //Enter first name
+        filterPage.setInputQueryFilter(LAST_NAME_WILSON);
 
+        // Click on first name check
+        filterPage.checkLastName();
+
+        // Click on Filter button
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
+
+        // Verifying if first name display on table
+        List<Person> listRecords = filterPage.getListRecords();
+        for (Person person: listRecords) {
+            assertThat(person.getLastName()).isEqualTo(LAST_NAME_WILSON);
+        }
     }
 
     @Test
-    public void selectOptions() {
-        filterPage.visit();
-        filterPage.selectPerPage(OPTION_5);
-        assertThat(filterPage.isSelectSelected(OPTION_5)).isTrue();
+    public void enterInvalidTextOnFilter() {
+        //Enter first name
+        filterPage.setInputQueryFilter(" ' ' ");
 
-        filterPage.selectPerPage(OPTION_10);
-        assertThat(filterPage.isSelectSelected(OPTION_10)).isTrue();
+        // Click on Filter button
+        filterPage.doFilter();
+        filterPage.waitForSpinner();
 
-        filterPage.selectPerPage(OPTION_15);
-        assertThat(filterPage.isSelectSelected(OPTION_15)).isTrue();
-
+        // Verifying if name displays on the table
+        assertThat(filterPage.getEmptyRowMessage()).contains("There are no records matching your request");
     }
 
     @Test
-    public void selectActiveCheckbox() {
-        filterPage.visit();
-        filterPage.isSelectCheckbox();
-        assertThat(filterPage.activeInactiveButton.isDisplayed());
+    public void testClearFilters() {
+        // Added some filters
+        filterPage.setInputQueryFilter(FIRST_NAME_GENEVA);
+        filterPage.checkFirstName();
+        filterPage.checkLastName();
+        filterPage.setBirthDateFrom(LocalDate.now());
+        filterPage.setBirthDateTo(LocalDate.now());
+
+        //Clear filters
+        filterPage.clearFilter();
+
+        // Verifying if filters were cleaned
+        assertThat(filterPage.getFilterQueryText()).isEmpty();
+        assertThat(filterPage.isFilterOnFirstNameChkChecked()).isFalse();
+        assertThat(filterPage.isFilterOnLastNameChkChecked()).isFalse();
+        assertThat(filterPage.birthDateFrom()).isEqualTo("From");
+        assertThat(filterPage.birthDateTo()).isEqualTo("To");
+        assertThat(filterPage.isOnlyActiveChecked()).isFalse();
     }
-
-    @Test
-    public void unselectActiveCheckbox() {
-        filterPage.visit();
-        filterPage.isUnselectCheckbox();
-        assertThat(filterPage.activeInactiveButton.equals("Null"));
-
-    }
-
-
-    @Test
-    public void hideDetails() {
-        filterPage.visit();
-        filterPage.getShowDetails();
-
-
-        assertThat(filterPage.rowDetails.isDisplayed());
-    }
-
-
-    @Test
-    public void showDetails() {
-        filterPage.visit();
-        filterPage.isUnselectCheckbox();
-
-        assertThat(filterPage.rowDetails.isDisplayed());
-    }
-
-    @Test
-    public void clickDescendingButtonFirstName() {
-        filterPage.visit();
-        filterPage.clickDescendingButtonFirstName();
-
-    }
-
-    @Test
-    public void clickDescendingButtonLastName() {
-        filterPage.visit();
-        filterPage.clickDescendingButtonLastName();
-
-    }
-
-    @Test
-    public void clickDescendingButtonBirthDate() {
-        filterPage.visit();
-        filterPage.clickDescendingButtonBirthDate();
-
-    }
-
-
-    @Test
-    public void clickAscendingButtonFirstName() {
-        filterPage.visit();
-        filterPage.clickAscendingButtonFirstName();
-
-    }
-
-    @Test
-    public void clickAscendingButtonLastName() {
-        filterPage.visit();
-        filterPage.clickAscendingButtonLastName();
-
-    }
-
-    @Test
-    public void clickAscendingButtonBirthDate() {
-        filterPage.visit();
-        filterPage.clickAscendingButtonBirthDate();
-
-    }
-
-    @Test
-    public void paginationFitlering() {
-        filterPage.visit();
-        filterPage.pagination();
-
-    }
-
-    @Test
-    public void filterDataBySpecialCharacters() {
-        filterPage.visit();
-        filterPage.filterDataBySpecialCharacters(SpecialCharacter);
-        assertThat(filterPage.returnMessageRecord().contains("There are no records matching your request"));
-
-    }
-
-    @Test
-    public void filterDataByBlankSpace() {
-        filterPage.visit();
-        filterPage.filterDataByBlankSpace(BlankSpace);
-
-    }
-
-    @Test
-    public void clearQueryFilter() {
-        filterPage.visit();
-        filterPage.clearQueryFilter(FIRSTNAME);
-        assertThat(filterPage.filterInput.getText().contains(""));
-     //   System.out.println(filterPage.filterInput.getText().contains(""));
-    }
-
-    @Test
-    public void clearFilters() {
-        filterPage.visit();
-        filterPage.clearFilters(LASTNAME,MONTH,YEAR);
-        assertThat(filterPage.lastName.getText().contains(""));
-        System.out.println(filterPage.lastName.getText().contains(""));
-        assertThat(filterPage.labelBirthDate.getText().contains(""));
-        System.out.println(filterPage.inputBirthDate.getText().contains(""));
-        assertThat(filterPage.chkFirstName.getText().contains(""));
-        System.out.println(filterPage.chkFirstName.getText().contains(""));
-        assertThat(filterPage.activeInactiveButton.getText().contains(""));
-        System.out.println(filterPage.activeInactiveButton.getText().contains(""));
-    }
-
 }
