@@ -4,8 +4,12 @@ import org.automation.architecture.TestProperties;
 import org.automation.architecture.annotations.PageObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindAll;
 import org.openqa.selenium.support.FindBy;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @PageObject
 public class LoginPage {
@@ -24,11 +28,8 @@ public class LoginPage {
     @FindBy(xpath = "//button[contains(@class,'btn-primary')]")
     public WebElement loginButton;
 
-    @FindBy(xpath = "//div[contains(@class, 'invalid-feedback') and text() = 'Please enter a valid email']")
-    private WebElement validationEmail;
-
-    @FindBy(xpath = "//div[contains(@class, 'invalid-feedback') and text() = 'Please enter a password']")
-    private WebElement validationPassword;
+    @FindAll(@FindBy(css = ".invalid-feedback"))
+    private List<WebElement> invalidMessages;
 
     public void visit() {
         webDriver.get(testProperties.getAppBaseUrl() + "simple-login");
@@ -40,23 +41,25 @@ public class LoginPage {
         loginButton.click();
     }
 
-
     public void validateEmptyEmailAndPassword(String email, String password) {
         emailInput.sendKeys(email);
         passwordInput.sendKeys(password);
         loginButton.click();
     }
 
-    public boolean isEmailValidationMessageVisible() {
-        return validationEmail.isDisplayed();
-    }
+    public List<String> getInvalidMessages() {
+        List<String> messages = new ArrayList<>();
 
-    public boolean isPasswordValidationMessageVisible() {
-        return validationPassword.isDisplayed();
+        for (WebElement element: invalidMessages) {
+            if(element.isDisplayed()) {
+                messages.add(element.getText());
+            }
+        }
+
+        return messages;
     }
 
     public String getCurrentURL(){
         return webDriver.getCurrentUrl();
     }
-
 }
